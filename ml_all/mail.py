@@ -6,7 +6,7 @@ from email.header import Header
 smtp_host = 'smtp.gmail.com'
 smtp_port = 465
 username = 'kalashnikova1120@gmail.com'
-password = 'nfjaizuqmrpspvti'
+password = 'mtmmycxqudujrilm'
 from_address = 'kalashnikova1120@gmail.com'
 to_address = 'kalashnikova1120@gmail.com'
 charset = 'utf-8'
@@ -25,3 +25,19 @@ message['To'] = to_address
 smtp.sendmail(from_address, [to_address],
              message.as_string())
 smtp.close()
+
+
+# smtp_host = 'smtp.gmail.com'
+# smtp_port = 465
+# username = 'kalashnikova1120@gmail.com'
+# password = 'lspcibnlmkoyuynf'
+# from_address = 'kalashnikova1120@gmail.com'
+# to_address = 'kalashnikova1120@gmail.com'
+# subject = 'test subject'
+# body = 'test body'
+# message = ("From: %srnTo: %srnSubject: %srnrn%s" % (from_address, to_address, subject, body))
+
+# smtp = smtplib.SMTP_SSL(smtp_host, smtp_port)
+# smtp.login(username, password)
+# result = smtp.sendmail(from_address, to_address, message)
+# print(result)
