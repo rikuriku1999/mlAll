@@ -1,13 +1,13 @@
-import pandas as pd  #pandasのインポート
-import datetime  #元データの日付処理のためにインポート
+import pandas as pd#pandasのインポート
+import datetime#元データの日付処理のためにインポート
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV  #データ分割用
+from sklearn.model_selection import train_test_split, GridSearchCV#データ分割用
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix,precision_score,recall_score,f1_score
-from sklearn.metrics import r2_score  #決定係数求める用
+from sklearn.metrics import r2_score#決定係数求める用
 import matplotlib.pyplot as plt
 #%matplotlib inline
 import joblib #モデルの保存、ロード用
-import pickle #モデルの保存、ロード用
+import pickle#モデルの保存、ロード用
 from pandas import Series, DataFrame
 import sklearn
 import pathlib
@@ -38,51 +38,25 @@ from sklearn.metrics import r2_score#決定係数求める用
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import scipy.stats
+import smtplib
 
 
 def NNclass():
+
     poms=["workload"]
-    for j in range(1,6):
 
-        train4 = train2[train2['workload'] == j]
-        test4 = test2[test2['workload'] == j]
-        train4 = train4[::5]
-        test4 = test4[::5]    
-        train3.append(train4)
-        test3.append(test4)
-        print(len(train4))
-    train3 = pd.concat(train3)
-    test3 = pd.concat(test3)
-    print("________________________")
-
-    print(train3)
-    print(test3)
-
-    train_x2 = train3.drop("workload",axis=1)
-    train_y2= train3[["workload"]]
-    test_x2=test3.drop("workload",axis=1)
-    test_y2= test3[["workload"]]       
-
-
-
-    train_x = np.array(train_x2)
-
-    test_x = np.array(test_x2)
-    train_y = np.array(train_y2)
-    test_y = np.array(test_y2)
 
     for i in poms:
         search_params = {
         #'hidden_layer_sizes'      : [(50,50)],#隠れ層のノード数
-        'hidden_layer_sizes'      : [(50,50),(100,100),(500,500),(1000,1000)],#隠れ層のノード数
+        #'hidden_layer_sizes'      : [(50,50),(100,100),(500,500),(1000,1000)],#隠れ層のノード数
+        'hidden_layer_sizes'      : [(50,50)],#隠れ層のノード数
         'activation': ["relu"],#活性化関数
         'solver'      : ['adam'],#最適化手法(大きなデータセットだとadam,小さなデータセットではlbfgs)
         'max_iter'            : [300,500,700,800,900,1000],#最大エポック数
+        # 'max_iter'            : [900],#最大エポック数
         #'max_iter'            : [900],#最大エポック数
         }
-
-
-    
         #パラメータ
         #search_params = [
         #    {'hidden_layer_sizes' : [10,100,1000], 'activation': ["relu", "tanh"],'solver' : ['lbfgs'],'max_iter':[1000] },
@@ -111,8 +85,14 @@ def NNclass():
         print(1)
 
         model2.fit(train_x, train_y)
+        print("######################################")
+
+        # with open('C:\\Users\\naklab\\Desktop\\ml_all\\NNmodeltwo0827.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
+        #     pickle.dump(model2, f)  
 
         print("iine")
+        print("######################################")
+
         
         pred_train =model2.predict(train_x)
         print("NNT"+i+"モデル")
@@ -188,7 +168,14 @@ def RDFclass():
         #'min_samples_leaf': [5,50],
         'max_depth'         : [5,10,20,50,100]#決定木最大の深さ
         }
-        
+        """
+        search_params = {
+        'criterion': ['gini', 'entropy'],
+        'n_estimators'      : [i for i in range(1,10)],#決定木の数
+        'max_features'      : ['sqrt', 'log2'],#個々の決定木に使用する特徴量の数
+        'max_depth'         : [2,3,4,5,6,7]#決定木最大の深さ
+        }
+        """
         RFC_grid = GridSearchCV(estimator=RFC(random_state=0,class_weight='balanced'),param_grid=search_params, scoring='accuracy', cv=5,verbose=True,n_jobs=-1) #グリッドサーチ・ランダムフォレスト
         
         RFC_grid.fit(train_x, train_y)
@@ -223,6 +210,10 @@ def RDFclass():
 
         # モデルの学習
         history_ = model2.fit(train_x, train_y)
+
+        # モデルの保存
+        with open('C:\\Users\\naklab\\Desktop\\ml_all\\RDFmodeltwo0825.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
+            pickle.dump(history_, f)                   # オブジェクトをシリアライズ
         
         # モデルを保存する(https://localab.jp/blog/save-and-load-machine-learning-models-in-python-with-scikit-learn/)
         #filename = 'RDF_Classification_grid'+i+'finalized_model.sav'
@@ -450,20 +441,36 @@ def SVMclass():
         wb.save(path + 'svm'+ str(l) + '.xlsx')
 
 
+l_list = [0, 300, 600, 900]
 
-for l in range(1):
+for l in l_list:
     df_list_test = []
     df_list_train = []
+    files = glob.glob('now_all/*')
+    test = [files[1],files[5],files[7],files[9],files[11],files[14],files[17],files[19],files[22],files[24]]
+    path ="output/"
     for file in files:
         if file in test:
             sub_df = pd.read_csv(file)
+            sub_wl = sub_df.pop("workload")
+            sub_wl = sub_wl[l:]
+            sub_wl = sub_wl.reset_index(drop=True)
+            sub_df = pd.concat([sub_df, sub_wl],axis = 1)
+            sub_df = sub_df.dropna()
             df_list_test.append(sub_df)
         else :
             sub_df = pd.read_csv(file)
+            sub_wl = sub_df.pop("workload")
+            sub_wl = sub_wl[l:]
+            sub_wl = sub_wl.reset_index(drop=True)
+            sub_df = pd.concat([sub_df, sub_wl],axis = 1)
+            sub_df = sub_df.dropna()
             df_list_train.append(sub_df)
-
+    
     df_list_train = pd.concat(df_list_train)
     df_list_test = pd.concat(df_list_test)
+    print(df_list_train)
+    print(df_list_test)
 
     train_x = df_list_train.drop("workload",axis=1)
     train_y= df_list_train[["workload"]]
@@ -483,18 +490,62 @@ for l in range(1):
     print(train_x)
     print(test_x)
 
+
     train3 = []
     test3 = []
+
+
 
 
     train2 = pd.concat([train_x,train_y], axis=1)
     test2 = pd.concat([test_x, test_y], axis=1)
     print(train2)
     print(test2)
-    files = glob.glob('C:\\Users\\rikua\\Documents\\ml_run_fdToWl\\ml_all\\now_all\\*')
-    test = [files[1],files[5],files[7],files[9],files[11],files[14],files[17],files[19],files[22],files[24]]
-    path ="C:\\Users\\rikua\\Documents\\ml_run_fdToWl\\ml_all\\output\\"
+    for j in range(1,6):
+
+        train4 = train2[train2['workload'] == j]
+        test4 = test2[test2['workload'] == j]
+        train4 = train4[::5]
+        test4 = test4[::5]    
+        train3.append(train4)
+        test3.append(test4)
+        print(len(train4))
+    train3 = pd.concat(train3)
+    test3 = pd.concat(test3)
+    print("________________________")
+
+    print(train3)
+    print(test3)
+
+    train_x2 = train3.drop("workload",axis=1)
+    train_y2= train3[["workload"]]
+    test_x2=test3.drop("workload",axis=1)
+    test_y2= test3[["workload"]]       
+
+
+
+    train_x = np.array(train_x2)
+
+    test_x = np.array(test_x2)
+    train_y = np.array(train_y2)
+    test_y = np.array(test_y2)
+
 
     NNclass()
     RDFclass()
     SVMclass()
+
+    smtp_host = 'smtp.gmail.com'
+    smtp_port = 465
+    username = 'kalashnikova1120@gmail.com'
+    password = 'nfjaizuqmrpspvti'
+    from_address = 'kalashnikova1120@gmail.com'
+    to_address = 'kalashnikova1120@gmail.com'
+    subject = 'test subject'
+    body = 'test body'
+    message = ("From: %srnTo: %srnSubject: %srnrn%s" % (from_address, to_address, subject, body))
+
+    smtp = smtplib.SMTP_SSL(smtp_host, smtp_port)
+    smtp.login(username, password)
+    result = smtp.sendmail(from_address, to_address, message)
+    print(result)
