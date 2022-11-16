@@ -27,6 +27,7 @@ smtp.sendmail(from_address, [to_address],
 smtp.close()
 
 
+
 # smtp_host = 'smtp.gmail.com'
 # smtp_port = 465
 # username = 'kalashnikova1120@gmail.com'
@@ -41,3 +42,4 @@ smtp.close()
 # smtp.login(username, password)
 # result = smtp.sendmail(from_address, to_address, message)
 # print(result)
+
