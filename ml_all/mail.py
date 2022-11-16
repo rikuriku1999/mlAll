@@ -6,7 +6,7 @@ from email.header import Header
 smtp_host = 'smtp.gmail.com'
 smtp_port = 465
 username = 'kalashnikova1120@gmail.com'
-password = 'mtmmycxqudujrilm'
+password = 
 from_address = 'kalashnikova1120@gmail.com'
 to_address = 'kalashnikova1120@gmail.com'
 charset = 'utf-8'
