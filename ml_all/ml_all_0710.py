@@ -273,9 +273,9 @@ def RDFclass():
         label = df_list_train.columns[0:]
         # 特徴量の重要度順（降順）に並べて表示
         indices = np.argsort(feature)[::-1]
-        for i in range(len(feature)):
-            print(str(i + 1) + "   " +
-                str(label[indices[i]]) + "   " + str(feature[indices[i]]))
+        for j in range(len(feature)):
+            print(str(j + 1) + "   " +
+                str(label[indices[j]]) + "   " + str(feature[indices[j]]))
             
         # 実際の値と予測値の比較グラフ
         plt.subplot(121, facecolor='white')
