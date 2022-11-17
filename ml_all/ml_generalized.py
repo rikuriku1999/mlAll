@@ -85,8 +85,8 @@ def NNclass(
 
         model2.fit(train_x, train_y)
 
-        # with open('C:\\Users\\naklab\\Desktop\\ml_all\\NNmodeltwo0827.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
-        #     pickle.dump(model2, f)  
+        with open('C:\\Users\\naklab\\Desktop\\ml_all\\NNmodeltwo0827.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
+            pickle.dump(model2, f)  
 
         pred_train =model2.predict(train_x)
         print("NNT"+i+"モデル")
@@ -116,6 +116,7 @@ def NNclass(
 
 
         print( "\n [ 正解率 ]" )#予測結果全体がどれくらい真の値と一致しているかを表す指標
+        best_accuracy_score = accuracy_score(test_y, pred_test) 
         print( accuracy_score(test_y, pred_test) )
 
         report_df = pd.DataFrame(train_class).T
@@ -131,11 +132,15 @@ def NNclass(
                 ws.cell(row = j+7,column = k+1,value = test_conf[j][k])
         
         wb.save("output/" + 'nn'+ str(l) + title + '.xlsx')
-    return best_model_params
+    return best_model_params, test_conf, best_accuracy_score
 
     
 
 def RDFclass(
+            train_x=None,
+            train_y=None,
+            test_x=None,
+            test_y=None,
             title="hoge", 
             criterion = "gini", 
             n_estimators = 100, 
@@ -253,8 +258,16 @@ def RDFclass(
     return best_model_params
 
 
-def SVMclass(title="hoge", C=1, kernel="rbf", gamma="scale"):
-    #パラメータ保存用
+def SVMclass(
+        train_x=None,
+        train_y=None,
+        test_x=None,
+        test_y=None,
+        title="hoge", 
+        C=1, 
+        kernel="rbf", 
+        gamma="scale"
+        ):
     #クラス間でのデータ数の不均衡を考慮
     #https://qiita.com/kento1109/items/1fc7488163b0f350f2fa
     poms=["workload"]
@@ -331,18 +344,6 @@ def SVMclass(title="hoge", C=1, kernel="rbf", gamma="scale"):
         print("適合率（Precision）, 再現率（Recall）, F値(f1-scoreのavg/totalの部分)")
         test_class = classification_report(test_y, pred_test,output_dict = True)
         print( test_class )
-
-        """
-        test_class2 = []
-        test_class3 = []
-        for j in range(len(test_class)):
-            for k in range(len(test_class.columns)):
-                test_class2.append(test_class.iat[j,k])
-            test_class3.append(test_class2)
-
-        for j in range(len(test_class3)):
-            for k in range(len(test_class3[1])):
-                ws.cell(j+1,k+10,value = test_class3[j][k])"""
 
         print( "\n [ 混同行列 ]" )
         test_conf = confusion_matrix(test_y, pred_test)
@@ -457,40 +458,41 @@ def mailing(subject, body):
     subject = subject
     body = body
     message = ("From: %s\r\nTo: %s\r\nSubject: %s \r\n\r\n %s" % (from_address, to_address, subject, body))
-#     message = """From: From Person <from@example.com>
-# To: To Person <to@example.com>
-# Subject: SMTP email example
-
-
-# This is a test message.
-# """
     smtp = smtplib.SMTP_SSL(smtp_host, smtp_port)
     smtp.login(username, password)
     result = smtp.sendmail(from_address, to_address, message)
 
 
 if __name__ == '__main__' :
-    # l_list = [0, 300, 600, 900]
-    l_list = [0]
+    l_list = [0, 300, 600, 900]
+    #l_list = [0]
     for l in l_list:
-        # train_x, test_x, train_y, test_y = datasetting(l)
-        # title = str(l)
-        # best_param_nn = NNclass(
-        #                 train_x=train_x,
-        #                 train_y=train_y,
-        #                 test_x=test_x,
-        #                 test_y=test_y,
-        #                 title = title,
-        #                 hidden_layer_sizes = [5], 
-        #                 solver = ["adam"], 
-        #                 activation = ["relu"], 
-        #                 max_iter = [30])
+        train_x, test_x, train_y, test_y = datasetting(l)
+        title = str(l)
+        sec = l/10
+        best_param_nn, test_conf_nn, accuracy_score_nn = NNclass(
+                        train_x=train_x,
+                        train_y=train_y,
+                        test_x=test_x,
+                        test_y=test_y,
+                        title = title,
+                        hidden_layer_sizes = [5], 
+                        solver = ["adam"], 
+                        activation = ["relu"], 
+                        max_iter = [30])
         # best_param_rdf = RDFclass(title=str(l))
         # best_param_svm = SVMclass(title=str(l))
+        accuracy_score_nn_str = str(accuracy_score_nn)
 
-        body = "hoge"
-
-        subject = "piyo"
+        best_param_nn_str = ' '.join(str(s) for s in best_param_nn)
+        test_conf_nn_str1 = ' '.join(str(s) for s in test_conf_nn[0])
+        test_conf_nn_str2 = ' '.join(str(s) for s in test_conf_nn[1])
+        test_conf_nn_str3 = ' '.join(str(s) for s in test_conf_nn[2])
+        test_conf_nn_str4 = ' '.join(str(s) for s in test_conf_nn[3])
+        test_conf_nn_str5 = ' '.join(str(s) for s in test_conf_nn[4])
+        body = ("accuracy score is %s \r\n Here is the confusion matrix \r\n%s \r\n %s\r\n %s\r\n %s\r\n %s" % (accuracy_score_nn_str, test_conf_nn_str1, test_conf_nn_str2, test_conf_nn_str3, test_conf_nn_str4, test_conf_nn_str5))
+        print(body)
+        subject = "NNmodel" + str(sec) + "seconds"
         mailing(subject, body)
 
 
