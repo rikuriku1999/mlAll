@@ -85,7 +85,7 @@ def NNclass(
 
         model2.fit(train_x, train_y)
 
-        with open('C:\\Users\\naklab\\Desktop\\ml_all\\NNmodeltwo0827.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
+        with open("models/" + 'nn'+ str(l) + '.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
             pickle.dump(model2, f)  
 
         pred_train =model2.predict(train_x)
@@ -125,6 +125,15 @@ def NNclass(
         report_df.to_csv("output/" + 'nn_test'+str(l)+'.csv')
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
+
+        param_list = []
+        param_list.append(["nn", str(l)])
+        for key in best_model_params:
+            param_list.append([key, best_model_params[key]])
+
+        with open('parameter/' + 'parameter.txt', 'w') as o:
+            for row in param_list:
+                print(*row, sep=",", file=o)
 
         for j in range(len(train_conf)):
             for k in range(len(train_conf[1])):
@@ -186,9 +195,9 @@ def RDFclass(
         # モデルの学習
         history_ = model2.fit(train_x, train_y)
 
-        # モデルの保存
-        # with open('C:\\Users\\naklab\\Desktop\\ml_all\\RDFmodeltwo0825.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
-        #     pickle.dump(history_, f)                   # オブジェクトをシリアライズ
+        #モデルの保存
+        with open("output/" + 'rdf'+ str(l) +'.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
+            pickle.dump(history_, f)                   # オブジェクトをシリアライズ
         
         # モデルを保存する(https://localab.jp/blog/save-and-load-machine-learning-models-in-python-with-scikit-learn/)
         #filename = 'RDF_Classification_grid'+i+'finalized_model.sav'
@@ -233,15 +242,18 @@ def RDFclass(
 
         print( "\n [ 正解率 ]" )#予測結果全体がどれくらい真の値と一致しているかを表す指標
         print( accuracy_score(test_y, pred_test) )
+        accuracy_score_rdf = accuracy_score(test_y, pred_test)
         
-        feature = model2.feature_importances_
-        # 特徴量の名前ラベルを取得
-        label = df_list_train.columns[0:]
-        # 特徴量の重要度順（降順）に並べて表示
-        indices = np.argsort(feature)[::-1]
-        for i in range(len(feature)):
-            print(str(i + 1) + "   " +
-                str(label[indices[i]]) + "   " + str(feature[indices[i]]))          
+        # feature = model2.feature_importances_
+        # # 特徴量の名前ラベルを取得
+        # label = df_list_train.columns[0:]
+        # # 特徴量の重要度順（降順）に並べて表示
+        # indices = np.argsort(feature)[::-1]
+        # for i in range(len(feature)):
+        #     print(str(i + 1) + "   " +
+        #         str(label[indices[i]]) + "   " + str(feature[indices[i]]))    
+
+
         report_df = pd.DataFrame(train_class).T
         report_df.to_csv("output/" + 'rdf_train'+str(l)+'.csv')
         report_df = pd.DataFrame(test_class).T
@@ -249,13 +261,22 @@ def RDFclass(
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
 
+        param_list = []
+        param_list.append(["rdf", str(l)])
+        for key in best_model_params:
+            param_list.append([key, best_model_params[key]])
+
+        with open('parameter/' + 'parameter.txt', 'w') as o:
+            for row in param_list:
+                print(*row, sep=",", file=o)
+
         for j in range(len(train_conf)):
             for k in range(len(train_conf[1])):
                 ws.cell(row = j+1,column = k+1,value = train_conf[j][k])
                 ws.cell(row = j+7,column = k+1,value = test_conf[j][k])
         
         wb.save("output/" + 'rdf'+ str(l) + title + '.xlsx')
-    return best_model_params
+    return best_model_params, test_conf, accuracy_score_rdf
 
 
 def SVMclass(
@@ -311,6 +332,9 @@ def SVMclass(
         # モデルの学習
         history_ = model2.fit(train_x, train_y)
         print("モデルの学習",history_)
+
+        with open("output/" + 'svc'+ str(l) +'.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
+            pickle.dump(history_, f)   
         #--------------------------------------------------------------------------------------------------------------------------------------------------
         
         #各試行でのスコアを確認
@@ -351,6 +375,7 @@ def SVMclass(
 
         print( "\n [ 正解率 ]" )#予測結果全体がどれくらい真の値と一致しているかを表す指標
         print( accuracy_score(test_y, pred_test) )
+        accuracy_score_svm = accuracy_score(test_y, pred_test)
 
         
         report_df = pd.DataFrame(train_class).T
@@ -360,13 +385,22 @@ def SVMclass(
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
 
+        param_list = []
+        param_list.append(["svm", str(l)])
+        for key in best_model_params:
+            param_list.append([key, best_model_params[key]])
+
+        with open('parameter/' + 'parameter.txt', 'w') as o:
+            for row in param_list:
+                print(*row, sep=",", file=o)
+
         for j in range(len(train_conf)):
             for k in range(len(train_conf[1])):
                 ws.cell(row = j+1,column = k+1,value = train_conf[j][k])
                 ws.cell(row = j+7,column = k+1,value = test_conf[j][k])
         
         wb.save("output/" + 'svm'+ str(l) + title + '.xlsx')
-    return best_model_params
+    return best_model_params, test_conf, accuracy_score_svm
 
 def datasetting(l):
     df_list_test = []
@@ -483,7 +517,6 @@ if __name__ == '__main__' :
         # best_param_rdf = RDFclass(title=str(l))
         # best_param_svm = SVMclass(title=str(l))
         accuracy_score_nn_str = str(accuracy_score_nn)
-
         best_param_nn_str = ' '.join(str(s) for s in best_param_nn)
         test_conf_nn_str1 = ' '.join(str(s) for s in test_conf_nn[0])
         test_conf_nn_str2 = ' '.join(str(s) for s in test_conf_nn[1])
@@ -493,6 +526,54 @@ if __name__ == '__main__' :
         body = ("accuracy score is %s \r\n Here is the confusion matrix \r\n%s \r\n %s\r\n %s\r\n %s\r\n %s" % (accuracy_score_nn_str, test_conf_nn_str1, test_conf_nn_str2, test_conf_nn_str3, test_conf_nn_str4, test_conf_nn_str5))
         print(body)
         subject = "NNmodel" + str(sec) + "seconds"
+        mailing(subject, body)
+
+        best_param_nn, test_conf_nn, accuracy_score_nn = RDFclass(
+                        train_x=train_x,
+                        train_y=train_y,
+                        test_x=test_x,
+                        test_y=test_y,
+                        title = title,
+                        hidden_layer_sizes = [5], 
+                        solver = ["adam"], 
+                        activation = ["relu"], 
+                        max_iter = [30])
+        # best_param_rdf = RDFclass(title=str(l))
+        # best_param_svm = SVMclass(title=str(l))
+        accuracy_score_nn_str = str(accuracy_score_nn)
+        best_param_nn_str = ' '.join(str(s) for s in best_param_nn)
+        test_conf_nn_str1 = ' '.join(str(s) for s in test_conf_nn[0])
+        test_conf_nn_str2 = ' '.join(str(s) for s in test_conf_nn[1])
+        test_conf_nn_str3 = ' '.join(str(s) for s in test_conf_nn[2])
+        test_conf_nn_str4 = ' '.join(str(s) for s in test_conf_nn[3])
+        test_conf_nn_str5 = ' '.join(str(s) for s in test_conf_nn[4])
+        body = ("accuracy score is %s \r\n Here is the confusion matrix \r\n%s \r\n %s\r\n %s\r\n %s\r\n %s" % (accuracy_score_nn_str, test_conf_nn_str1, test_conf_nn_str2, test_conf_nn_str3, test_conf_nn_str4, test_conf_nn_str5))
+        print(body)
+        subject = "rdfmodel" + str(sec) + "seconds"
+        mailing(subject, body)
+
+        best_param_nn, test_conf_nn, accuracy_score_nn = SVMclass(
+                        train_x=train_x,
+                        train_y=train_y,
+                        test_x=test_x,
+                        test_y=test_y,
+                        title = title,
+                        hidden_layer_sizes = [5], 
+                        solver = ["adam"], 
+                        activation = ["relu"], 
+                        max_iter = [30])
+        # best_param_rdf = RDFclass(title=str(l))
+        # best_param_svm = SVMclass(title=str(l))
+        accuracy_score_nn_str = str(accuracy_score_nn)
+        best_param_nn_str = ' '.join(str(s) for s in best_param_nn)
+        test_conf_nn_str1 = ' '.join(str(s) for s in test_conf_nn[0])
+        test_conf_nn_str2 = ' '.join(str(s) for s in test_conf_nn[1])
+        test_conf_nn_str3 = ' '.join(str(s) for s in test_conf_nn[2])
+        test_conf_nn_str4 = ' '.join(str(s) for s in test_conf_nn[3])
+        test_conf_nn_str5 = ' '.join(str(s) for s in test_conf_nn[4])
+        body = ("accuracy score is %s \r\n Here is the confusion matrix \r\n%s \r\n %s\r\n %s\r\n %s\r\n %s" % (accuracy_score_nn_str, test_conf_nn_str1, test_conf_nn_str2, test_conf_nn_str3, test_conf_nn_str4, test_conf_nn_str5))
+        print(body)
+        subject = "svmmodel" + str(sec) + "seconds"
         mailing(subject, body)
 
 
