@@ -60,7 +60,6 @@ def NNclass(
             'hidden_layer_sizes' : hidden_layer_sizes, 
             'activation': activation,
             'solver' : solver,
-            'max_iter':max_iter
            },
         ]
              
@@ -154,8 +153,8 @@ def RDFclass(
             criterion = "gini", 
             n_estimators = 100, 
             max_features = "sqrt", 
-            min_samples_leaf = 1, 
-            min_samples_split = 2, 
+            min_samples_leaf = None, 
+            min_samples_split = None, 
             max_depth = 30
             ):
 
@@ -534,9 +533,9 @@ if __name__ == '__main__' :
                         test_x=test_x,
                         test_y=test_y,
                         title = title,
-                        hidden_layer_sizes = [5], 
-                        solver = ["adam"], 
-                        activation = ["relu"], 
+                        n_estimators=[100, 200, 300, 400],
+                        max_depth=[10, 30, 50, None]
+                        max_features=["sqrt", "log2"]
                         max_iter = [30])
         # best_param_rdf = RDFclass(title=str(l))
         # best_param_svm = SVMclass(title=str(l))
@@ -558,10 +557,9 @@ if __name__ == '__main__' :
                         test_x=test_x,
                         test_y=test_y,
                         title = title,
-                        hidden_layer_sizes = [5], 
-                        solver = ["adam"], 
-                        activation = ["relu"], 
-                        max_iter = [30])
+                        C = [0.1, 0.3, 1, 3, 10], 
+                        gamma = [0.01, 0.03, 0.1, 0.3, 1, 3, 10], 
+                        max_iter = [100])
         # best_param_rdf = RDFclass(title=str(l))
         # best_param_svm = SVMclass(title=str(l))
         accuracy_score_nn_str = str(accuracy_score_nn)
