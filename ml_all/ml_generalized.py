@@ -41,30 +41,27 @@ import scipy.stats
 import smtplib
 
 
-def NNclass(title = title, hidden_layer_sizes = hidden_layer_sizes, solver = solver, activation = activation, max_iter = max_iter):
-
+def NNclass(
+        train_x=None,
+        train_y=None,
+        test_x=None,
+        test_y=None,
+        title = "hoge",
+        hidden_layer_sizes = 300, 
+        solver = "adam", 
+        activation = "relu", 
+        max_iter = 300
+        ):
     poms=["workload"]
 
-    best_param_NN = {}
-
     for i in poms:
-        search_params = {
-        #'hidden_layer_sizes'      : [(50,50)],#隠れ層のノード数
-        #'hidden_layer_sizes'      : [(50,50),(100,100),(500,500),(1000,1000)],#隠れ層のノード数
-        'hidden_layer_sizes'      : [(50,50)],#隠れ層のノード数
-        'activation': ["relu"],#活性化関数
-        'solver'      : ['adam'],#最適化手法(大きなデータセットだとadam,小さなデータセットではlbfgs)
-        'max_iter'            : [300,500,700,800,900,1000],#最大エポック数
-        # 'max_iter'            : [900],#最大エポック数
-        #'max_iter'            : [900],#最大エポック数
-        }
-        #パラメータ
-        #search_params = [
-        #    {'hidden_layer_sizes' : [10,100,1000], 'activation': ["relu", "tanh"],'solver' : ['lbfgs'],'max_iter':[1000] },
-        #    {'hidden_layer_sizes' : [10,100,1000], 'activation': ["relu", "tanh"], 'solver': ["adam","sgd"],'batch_size':[64,128,256,512],'max_iter':[1000]}
-        #]
         search_params = [
-           {'hidden_layer_sizes' : hidden_layer_sizes, 'activation': activation,'solver' : solver,'max_iter':max_iter},
+           {
+            'hidden_layer_sizes' : hidden_layer_sizes, 
+            'activation': activation,
+            'solver' : solver,
+            'max_iter':max_iter
+           },
         ]
              
         clf = GridSearchCV(estimator=MLPClassifier(random_state=0),param_grid=search_params, scoring="f1_macro" , cv=5,verbose=True,n_jobs=-1) 
@@ -85,19 +82,12 @@ def NNclass(title = title, hidden_layer_sizes = hidden_layer_sizes, solver = sol
         #モデルの構築
         #model2 = RFC(criterion=criterion_, max_depth = max_depth_, max_features=max_features_ , n_estimators=n_estimators_,random_state=0,verbose=1)
         model2 = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes_,activation=activation_,solver=solver_,early_stopping = True,  shuffle = False,max_iter=max_iter_,random_state=0,verbose=True)
-        
-        print(1)
 
         model2.fit(train_x, train_y)
-        print("######################################")
 
         # with open('C:\\Users\\naklab\\Desktop\\ml_all\\NNmodeltwo0827.pickle', mode='wb') as f:  # with構文でファイルパスとバイナリ書き込みモードを設定
         #     pickle.dump(model2, f)  
 
-        print("iine")
-        print("######################################")
-
-        
         pred_train =model2.predict(train_x)
         print("NNT"+i+"モデル")
         print( "\n [ 訓練データ結果 ]" )
@@ -127,19 +117,11 @@ def NNclass(title = title, hidden_layer_sizes = hidden_layer_sizes, solver = sol
 
         print( "\n [ 正解率 ]" )#予測結果全体がどれくらい真の値と一致しているかを表す指標
         print( accuracy_score(test_y, pred_test) )
-        plt.plot(model2.loss_curve_)
-        plt.title("Loss Curve", fontsize=14)
-        plt.xlabel('Iterations')
-        plt.ylabel('Cost')
-        #plt.show()
-
-        
-
 
         report_df = pd.DataFrame(train_class).T
-        report_df.to_csv(path + 'nn_train'+str(l)+'.csv')
+        report_df.to_csv("output/" + 'nn_train'+str(l)+'.csv')
         report_df = pd.DataFrame(test_class).T
-        report_df.to_csv(path + 'nn_test'+str(l)+'.csv')
+        report_df.to_csv("output/" + 'nn_test'+str(l)+'.csv')
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
 
@@ -148,56 +130,44 @@ def NNclass(title = title, hidden_layer_sizes = hidden_layer_sizes, solver = sol
                 ws.cell(row = j+1,column = k+1,value = train_conf[j][k])
                 ws.cell(row = j+7,column = k+1,value = test_conf[j][k])
         
-        wb.save(path + 'nn'+ str(l) + title + '.xlsx')
+        wb.save("output/" + 'nn'+ str(l) + title + '.xlsx')
+    return best_model_params
 
     
 
-def RDFclass(title=title, criterion = criterion, n_estimators = n_estimators, max_features = max_features, min_samples_leaf = min_samples_leaf, min_samples_split = min_samples_split, max_depth = max_depth):
-
-    best_param_rdf = {}
+def RDFclass(
+            title="hoge", 
+            criterion = "gini", 
+            n_estimators = 100, 
+            max_features = "sqrt", 
+            min_samples_leaf = 1, 
+            min_samples_split = 2, 
+            max_depth = 30
+            ):
 
     poms=["workload"]
     #グリッドサーチ、分類のバランスを考慮、ラベルエンコーディングしたとき
     #https://qiita.com/kazuki_hayakawa/items/6d7a4597829f54ebdb83
     for i in poms:
-        """
-        search_params = {
-        'criterion': ['gini', 'entropy'],
-        'n_estimators'      : [10,20,50,100],#決定木の数
-        'max_features'      : ['sqrt', 'log2'],#個々の決定木に使用する特徴量の数
-        #'n_jobs'            : [1],
-        #'min_samples_split' : [3, 5, 10, 20, 30, 40, 50, 100],
-        #'min_samples_leaf': [5,50],
-        'max_depth'         : [5,10,20,50,100]#決定木最大の深さ
-        }
-        """
-        search_params = {
-        'criterion': ['gini', 'entropy'],
-        'n_estimators'      : [i for i in range(1,10)],#決定木の数
-        'max_features'      : ['sqrt', 'log2'],#個々の決定木に使用する特徴量の数
-        'max_depth'         : [2,3,4,5,6,7]#決定木最大の深さ
-        }
-
         search_params = {
         'criterion': criterion,
         'n_estimators'      : n_estimators,#決定木の数
         'max_features'      : max_features,#個々の決定木に使用する特徴量の数
         'max_depth'         : max_depth#決定木最大の深さ
         }  
-
         RFC_grid = GridSearchCV(estimator=RFC(random_state=0,class_weight='balanced'),param_grid=search_params, scoring='accuracy', cv=5,verbose=True,n_jobs=-1) #グリッドサーチ・ランダムフォレスト
         
         RFC_grid.fit(train_x, train_y)
         best_model = RFC_grid.best_estimator_
         best_model_params=RFC_grid.best_params_
         
-        best_param_rdf["criterion"] = best_model_params["criterion"]
-        best_param_rdf["max_depth"] = best_model_params["max_depth"]
-        best_param_rdf["max_features"] = best_model_params["max_features"]
-        best_param_rdf["min_samples_split"] = best_model_params["min_samples_split"]
-        best_param_rdf["min_samples_leaf"] = best_model_params["min_samples_leaf"]
-        best_param_rdf["n_estimators"] = best_model_params["n_estimators"]
-        best_param_rdf["n_jobs"] = best_model_params["n_jobs"]
+        criterion_ = best_model_params["criterion"]
+        max_depth_ = best_model_params["max_depth"]
+        max_features_ = best_model_params["max_features"]
+        min_samples_split_ = best_model_params["min_samples_split"]
+        min_samples_leaf_ = best_model_params["min_samples_leaf"]
+        n_estimators_ = best_model_params["n_estimators"]
+        n_jobs_ = best_model_params["n_jobs"]
         
         #モデルの構築
         model2 = RFC(class_weight='balanced',criterion=criterion_, max_depth = max_depth_, max_features=max_features_ , n_estimators=n_estimators_,random_state=0,verbose=1)
@@ -266,33 +236,11 @@ def RDFclass(title=title, criterion = criterion, n_estimators = n_estimators, ma
         indices = np.argsort(feature)[::-1]
         for i in range(len(feature)):
             print(str(i + 1) + "   " +
-                str(label[indices[i]]) + "   " + str(feature[indices[i]]))
-            
-        # # 実際の値と予測値の比較グラフ
-        # plt.subplot(121, facecolor='white')
-        # #plt_label = [i for i in range(1, 32)]
-        # plt.plot(test_y, color='blue')
-        # plt.plot(pred_test, color='red')
-        # # 特徴量の重要度の棒グラフ
-        # plt.subplot(122, facecolor='white')
-        # plt.title('特徴量の重要度')
-        # plt.bar(
-        #     range(
-        #         len(feature)),
-        #     feature[indices],
-        #     color='blue',
-        #     align='center')
-        # plt.xticks(range(len(feature)), label[indices], rotation=45)
-        # plt.xlim([-1, len(feature)])
-        # plt.tight_layout()
-        # グラフの表示
-        #plt.show()
-
-                
+                str(label[indices[i]]) + "   " + str(feature[indices[i]]))          
         report_df = pd.DataFrame(train_class).T
-        report_df.to_csv(path + 'rdf_train'+str(l)+'.csv')
+        report_df.to_csv("output/" + 'rdf_train'+str(l)+'.csv')
         report_df = pd.DataFrame(test_class).T
-        report_df.to_csv(path + 'rdf_test'+str(l)+'.csv')
+        report_df.to_csv("output/" + 'rdf_test'+str(l)+'.csv')
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
 
@@ -301,37 +249,25 @@ def RDFclass(title=title, criterion = criterion, n_estimators = n_estimators, ma
                 ws.cell(row = j+1,column = k+1,value = train_conf[j][k])
                 ws.cell(row = j+7,column = k+1,value = test_conf[j][k])
         
-        wb.save(path + 'rdf'+ str(l) + title + '.xlsx')
+        wb.save("output/" + 'rdf'+ str(l) + title + '.xlsx')
+    return best_model_params
 
 
-def SVMclass(title=title, C=C, kernel=kernel, gamma=gamma):
+def SVMclass(title="hoge", C=1, kernel="rbf", gamma="scale"):
     #パラメータ保存用
     #クラス間でのデータ数の不均衡を考慮
     #https://qiita.com/kento1109/items/1fc7488163b0f350f2fa
-    best_param_svm = {}
     poms=["workload"]
     for i in poms:
-        #パラメータ
-        tuned_parameters = [
-            #{'C': [10], 'kernel': ['linear']},
-            #"""{'C': [1, 10, 100], 'kernel': ['rbf'], 'gamma': [0.01, 0.001, 0.0001]}"""
-            {'C': [0.5, 1], 'kernel': ['rbf'], 'gamma': [0.01, 0.005]}
-        ]
-
         tuned_parameters = [
             {'C': C, 'kernel': kernel, 'gamma': gamma}
-        ]
-
-        print("パラメータ：",tuned_parameters)
-        
+        ]     
         #最適化の実行
-        score = 'accuracy'
         clf = GridSearchCV(
             SVC(class_weight='balanced'), # 識別器
             tuned_parameters, # 最適化したいパラメータセット 
             cv=5, # 交差検定の回数
             scoring='accuracy' ) # モデルの評価関数の指定
-            #scoring='%s_weighted' % score ) # モデルの評価関数の指定
         print("clf",clf)
         clf.fit(train_x, train_y)
 
@@ -417,9 +353,9 @@ def SVMclass(title=title, C=C, kernel=kernel, gamma=gamma):
 
         
         report_df = pd.DataFrame(train_class).T
-        report_df.to_csv(path + 'svm_train'+str(l)+'.csv')
+        report_df.to_csv("output/" + 'svm_train'+str(l)+'.csv')
         report_df = pd.DataFrame(test_class).T
-        report_df.to_csv(path + 'svm_test'+str(l)+'.csv')
+        report_df.to_csv("output/" + 'svm_test'+str(l)+'.csv')
         wb = openpyxl.Workbook()
         ws = wb.worksheets[0]
 
@@ -428,17 +364,14 @@ def SVMclass(title=title, C=C, kernel=kernel, gamma=gamma):
                 ws.cell(row = j+1,column = k+1,value = train_conf[j][k])
                 ws.cell(row = j+7,column = k+1,value = test_conf[j][k])
         
-        wb.save(path + 'svm'+ str(l) + title + '.xlsx')
+        wb.save("output/" + 'svm'+ str(l) + title + '.xlsx')
+    return best_model_params
 
-
-l_list = [0, 300, 600, 900]
-
-for l in l_list:
+def datasetting(l):
     df_list_test = []
     df_list_train = []
     files = glob.glob('now_all/*')
     test = [files[1],files[5],files[7],files[9],files[11],files[14],files[17],files[19],files[22],files[24]]
-    path ="output/"
     for file in files:
         if file in test:
             sub_df = pd.read_csv(file)
@@ -456,7 +389,6 @@ for l in l_list:
             sub_df = pd.concat([sub_df, sub_wl],axis = 1)
             sub_df = sub_df.dropna()
             df_list_train.append(sub_df)
-    
     df_list_train = pd.concat(df_list_train)
     df_list_test = pd.concat(df_list_test)
     print(df_list_train)
@@ -475,24 +407,19 @@ for l in l_list:
     train_x, train_y = sm.fit_resample(train_x, train_y)
     test_x, test_y = sm.fit_resample(test_x, test_y)
     
-    print("________________________")
 
     print(train_x)
     print(test_x)
 
-
     train3 = []
     test3 = []
-
-
-
 
     train2 = pd.concat([train_x,train_y], axis=1)
     test2 = pd.concat([test_x, test_y], axis=1)
     print(train2)
     print(test2)
-    for j in range(1,6):
 
+    for j in range(1,6):
         train4 = train2[train2['workload'] == j]
         test4 = test2[test2['workload'] == j]
         train4 = train4[::5]
@@ -500,6 +427,7 @@ for l in l_list:
         train3.append(train4)
         test3.append(test4)
         print(len(train4))
+
     train3 = pd.concat(train3)
     test3 = pd.concat(test3)
     print("________________________")
@@ -512,30 +440,57 @@ for l in l_list:
     test_x2=test3.drop("workload",axis=1)
     test_y2= test3[["workload"]]       
 
-
-
     train_x = np.array(train_x2)
-
     test_x = np.array(test_x2)
     train_y = np.array(train_y2)
     test_y = np.array(test_y2)
+    return train_x, test_x, train_y, test_y
 
 
-    NNclass(str(l))
-    RDFclass(str(l))
-    SVMclass(str(l))
-
+def mailing(subject, body):
     smtp_host = 'smtp.gmail.com'
     smtp_port = 465
-    username = 'kalashnikova1120@gmail.com'
+    username = 'adc1120rk@gmail.com'
     password = ''
-    from_address = 'kalashnikova1120@gmail.com'
-    to_address = 'kalashnikova1120@gmail.com'
-    subject = 'test subject'
-    body = 'test body'
-    message = ("From: %srnTo: %srnSubject: %srnrn%s" % (from_address, to_address, subject, body))
+    from_address = 'adc1120rk@gmail.com'
+    to_address = 'adc1120rk@gmail.com'
+    subject = subject
+    body = body
+    message = ("From: %s\r\nTo: %s\r\nSubject: %s \r\n\r\n %s" % (from_address, to_address, subject, body))
+#     message = """From: From Person <from@example.com>
+# To: To Person <to@example.com>
+# Subject: SMTP email example
 
+
+# This is a test message.
+# """
     smtp = smtplib.SMTP_SSL(smtp_host, smtp_port)
     smtp.login(username, password)
     result = smtp.sendmail(from_address, to_address, message)
-    print(result)
+
+
+if __name__ == '__main__' :
+    # l_list = [0, 300, 600, 900]
+    l_list = [0]
+    for l in l_list:
+        # train_x, test_x, train_y, test_y = datasetting(l)
+        # title = str(l)
+        # best_param_nn = NNclass(
+        #                 train_x=train_x,
+        #                 train_y=train_y,
+        #                 test_x=test_x,
+        #                 test_y=test_y,
+        #                 title = title,
+        #                 hidden_layer_sizes = [5], 
+        #                 solver = ["adam"], 
+        #                 activation = ["relu"], 
+        #                 max_iter = [30])
+        # best_param_rdf = RDFclass(title=str(l))
+        # best_param_svm = SVMclass(title=str(l))
+
+        body = "hoge"
+
+        subject = "piyo"
+        mailing(subject, body)
+
+
