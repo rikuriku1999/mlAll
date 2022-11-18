@@ -74,13 +74,12 @@ def NNclass(
         hidden_layer_sizes_ = best_model_params["hidden_layer_sizes"]
         activation_ = best_model_params["activation"]
         solver_=best_model_params["solver"]
-        max_iter_ = best_model_params["max_iter"]
         
         print(best_model_params)
         
         #モデルの構築
         #model2 = RFC(criterion=criterion_, max_depth = max_depth_, max_features=max_features_ , n_estimators=n_estimators_,random_state=0,verbose=1)
-        model2 = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes_,activation=activation_,solver=solver_,early_stopping = True,  shuffle = False,max_iter=max_iter_,random_state=0,verbose=True)
+        model2 = MLPClassifier(hidden_layer_sizes=hidden_layer_sizes_,activation=activation_,solver=solver_,early_stopping = True,  shuffle = False,random_state=0,verbose=True)
 
         model2.fit(train_x, train_y)
 
@@ -150,7 +149,7 @@ def RDFclass(
             test_x=None,
             test_y=None,
             title="hoge", 
-            criterion = "gini", 
+            criterion = ["gini"], 
             n_estimators = 100, 
             max_features = "sqrt", 
             min_samples_leaf = None, 
@@ -177,10 +176,10 @@ def RDFclass(
         criterion_ = best_model_params["criterion"]
         max_depth_ = best_model_params["max_depth"]
         max_features_ = best_model_params["max_features"]
-        min_samples_split_ = best_model_params["min_samples_split"]
-        min_samples_leaf_ = best_model_params["min_samples_leaf"]
+        # min_samples_split_ = best_model_params["min_samples_split"]
+        # min_samples_leaf_ = best_model_params["min_samples_leaf"]
         n_estimators_ = best_model_params["n_estimators"]
-        n_jobs_ = best_model_params["n_jobs"]
+        # n_jobs_ = best_model_params["n_jobs"]
         
         #モデルの構築
         model2 = RFC(class_weight='balanced',criterion=criterion_, max_depth = max_depth_, max_features=max_features_ , n_estimators=n_estimators_,random_state=0,verbose=1)
@@ -485,7 +484,7 @@ def mailing(subject, body):
     smtp_host = 'smtp.gmail.com'
     smtp_port = 465
     username = 'adc1120rk@gmail.com'
-    password = ''
+    password = 'obuphvtizkhzwgyw'
     from_address = 'adc1120rk@gmail.com'
     to_address = 'adc1120rk@gmail.com'
     subject = subject
@@ -534,9 +533,8 @@ if __name__ == '__main__' :
                         test_y=test_y,
                         title = title,
                         n_estimators=[100, 200, 300, 400],
-                        max_depth=[10, 30, 50, None]
-                        max_features=["sqrt", "log2"]
-                        max_iter = [30])
+                        max_depth=[10, 30, 50, None],
+                        max_features=["sqrt", "log2"])
         # best_param_rdf = RDFclass(title=str(l))
         # best_param_svm = SVMclass(title=str(l))
         accuracy_score_nn_str = str(accuracy_score_nn)
@@ -559,7 +557,7 @@ if __name__ == '__main__' :
                         title = title,
                         C = [0.1, 0.3, 1, 3, 10], 
                         gamma = [0.01, 0.03, 0.1, 0.3, 1, 3, 10], 
-                        max_iter = [100])
+                        kernel = ["rbf"])
         # best_param_rdf = RDFclass(title=str(l))
         # best_param_svm = SVMclass(title=str(l))
         accuracy_score_nn_str = str(accuracy_score_nn)
