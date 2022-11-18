@@ -484,7 +484,7 @@ def mailing(subject, body):
     smtp_host = 'smtp.gmail.com'
     smtp_port = 465
     username = 'adc1120rk@gmail.com'
-    password = 'obuphvtizkhzwgyw'
+    password = ''
     from_address = 'adc1120rk@gmail.com'
     to_address = 'adc1120rk@gmail.com'
     subject = subject
