@@ -1,5 +1,5 @@
-nn,300
-activation,relu
-hidden_layer_sizes,5
-max_iter,30
-solver,adam
+rdf,0
+criterion,gini
+max_depth,50
+max_features,log2
+n_estimators,100
